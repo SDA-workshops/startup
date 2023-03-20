@@ -116,7 +116,6 @@ class Department(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False, unique=True)
     address = Column(String(50))
-    manager_id = Column(Integer, nullable=False)
 
     employees = relationship(
         "Employee",
