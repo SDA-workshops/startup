@@ -85,7 +85,7 @@ class Employee(Base):
     last_name = Column(String(50), nullable=False)
     email = Column(String(50), nullable=False, unique=True)
     birth = Column(Date, nullable=False)
-    phone = Column(String(20), nullable=False)
+    phone = Column(String(50), nullable=False)
     home_address = Column(String(100), nullable=False)
 
     salaries = relationship("Salary")
