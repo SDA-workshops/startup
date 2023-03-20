@@ -22,8 +22,26 @@ Base = declarative_base(bind=engine)
 employees_departments = Table(
     "employees_departments",
     Base.metadata,
-    Column("pesel", ForeignKey("employees.pesel"), primary_key=True),
+    Column("employee_id", ForeignKey("employees.pesel"), primary_key=True),
     Column("department_id", ForeignKey("departments.id"), primary_key=True),
+    Column("date", Date, default=datetime.datetime.now)
+)
+
+
+managers_departments = Table(
+    "managers_departments",
+    Base.metadata,
+    Column("manager_id", ForeignKey("employees.pesel"), primary_key=True),
+    Column("department_id", ForeignKey("departments.id"), primary_key=True),
+    Column("date", Date, default=datetime.datetime.now)
+)
+
+
+employees_positions = Table(
+    "employees_positions",
+    Base.metadata,
+    Column("employee_id", ForeignKey("employees.pesel"), primary_key=True),
+    Column("position_id", ForeignKey("positions.id"), primary_key=True),
     Column("date", Date, default=datetime.datetime.now)
 )
 
@@ -34,6 +52,12 @@ class Position(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(20), nullable=False)
     amount = Column(DECIMAL(precision=10, scale=2), nullable=False)
+
+    employees = relationship(
+        "Employee",
+        secondary=employees_positions,
+        back_populates="positions"
+    )
 
     def __repr__(self) -> str:
         return f"Position({self.id}, {self.name}, {self.amount})"
@@ -71,6 +95,12 @@ class Employee(Base):
         back_populates="employees"
     )
 
+    positions = relationship(
+        "Position",
+        secondary=employees_positions,
+        back_populates="employees"
+    )
+
     def pay(self, amount: float, date: str = None) -> None:
         self.salaries.append(
             Salary(amount=amount, date=date, pesel=self.pesel)
@@ -94,9 +124,10 @@ class Department(Base):
         back_populates="departments"
     )
 
+    managers = relationship(
+        "Employee",
+        secondary=managers_departments
+    )
+
     def __repr__(self) -> str:
         return f"Department({self.name}, {self.manager_id})"
-
-
-if __name__ == "__main__":
-    Base.metadata.create_all()
