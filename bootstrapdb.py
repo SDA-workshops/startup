@@ -1,10 +1,10 @@
-from random import choice
+from random import choice, choices
 from string import digits
 
 from faker import Faker
 from sqlalchemy.exc import IntegrityError
 
-from models import Employee
+from models import Employee, Department
 from session import Session
 
 
@@ -15,10 +15,7 @@ def generate_pesel():
 def create_employee():
     faker = Faker()
     return Employee(
-        pesel=choice([
-            generate_pesel(),
-            "31021627901"
-        ]),
+        pesel=generate_pesel(),
         first_name=faker.first_name(),
         last_name=faker.last_name(),
         email=faker.email(),
@@ -50,8 +47,42 @@ def pay_salaries(session: Session):
     session.commit()
 
 
+def create_departments(session: Session):
+    departments = [
+        "HR", "HQ", "Sales", "IT", "Marketing", "Supply",
+        "Law", "Reclamation", "Support", "PR"
+    ]
+    for department in departments:
+        session.add(
+            Department(
+                name=department,
+                address="Wiejska 1, Warszawa"
+            )
+        )
+        try:
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+
+
+def shuffle_employees(session: Session):
+    employees = session.query(Employee).all()
+    departments = choices(session.query(Department).all(), k=5)
+    for department in departments:
+        department.employees.extend(
+            choices(employees, k=20)
+        )
+        try:
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+
+
 if __name__ == "__main__":
     session = Session()
 
-    create_employees(session, 300)
+    create_employees(session)
     pay_salaries(session)
+
+    create_departments(session)
+    shuffle_employees(session)
